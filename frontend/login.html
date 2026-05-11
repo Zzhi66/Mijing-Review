@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="description" content="觅境点评 —— 登录，探索臻选生活空间" />
+  <title>登录 · 觅境点评</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="./css/common.css" />
+  <style>
+    /* ── 页面特有样式 ── */
+    body {
+      background: var(--gradient-hero);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    /* 登录卡片 */
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 24px;
+      padding: 40px 36px 44px;
+      box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.25),
+        0 8px 20px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255,255,255,0.8);
+      animation: cardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 卡片顶部装饰光晕 */
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255,92,92,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .login-card::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      left: -40px;
+      width: 160px;
+      height: 160px;
+      background: radial-gradient(circle, rgba(255,154,60,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(32px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* 品牌区域 */
+    .brand {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .brand-logo {
+      width: 72px;
+      height: 72px;
+      background: var(--gradient-primary);
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-primary);
+      position: relative;
+      animation: logoPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes logoPulse {
+      0%, 100% { box-shadow: var(--shadow-primary); }
+      50% { box-shadow: 0 8px 28px rgba(255, 92, 92, 0.5); }
+    }
+
+    .brand-name {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .brand-name span {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .brand-slogan {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      margin-top: 6px;
+      letter-spacing: 0.04em;
+    }
+
+    /* 表单 */
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 验证码行 */
+    .code-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .code-row .input-wrap {
+      flex: 1;
+    }
+
+    #btn-send-code {
+      flex-shrink: 0;
+      height: 50px;
+      padding: 0 16px;
+      font-size: 13px;
+      border-radius: var(--radius-md);
+      white-space: nowrap;
+      min-width: 100px;
+    }
+
+    /* 登录按钮 */
+    #btn-login {
+      height: 52px;
+      font-size: 16px;
+      border-radius: var(--radius-md);
+      margin-top: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #btn-login::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s ease;
+    }
+
+    #btn-login:hover:not(:disabled)::after {
+      transform: translateX(100%);
+    }
+
+    /* 免责声明 */
+    .disclaimer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      line-height: 1.7;
+      margin-top: 4px;
+    }
+
+    .disclaimer a {
+      color: var(--color-primary);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    /* 分隔符 */
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--color-text-muted);
+      font-size: 13px;
+    }
+
+    .or-divider::before,
+    .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
+    }
+
+    /* 演示提示（开发用） */
+    .dev-hint {
+      background: rgba(255, 154, 60, 0.08);
+      border: 1px dashed rgba(255, 154, 60, 0.4);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--color-accent);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    /* 输入框焦点动画 */
+    .input-field {
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    }
+
+    .input-field:focus {
+      transform: scale(1.005);
+    }
+
+    /* 错误状态 */
+    .input-field.error {
+      border-color: var(--color-danger);
+      box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.12);
+    }
+
+    /* 成功状态 */
+    .input-field.valid {
+      border-color: var(--color-success);
+    }
+
+    /* 验证提示文字 */
+    .field-hint {
+      font-size: 12px;
+      margin-top: 4px;
+      min-height: 16px;
+      transition: all var(--transition-fast);
+    }
+
+    .field-hint.error { color: var(--color-danger); }
+    .field-hint.valid { color: var(--color-success); }
+  </style>
+</head>
+<body>
+
+<div class="login-card" role="main">
+
+  <!-- 品牌区域 -->
+  <div class="brand">
+    <div class="brand-logo" aria-hidden="true">🏮</div>
+    <h1 class="brand-name">觅<span>境</span>点评</h1>
+    <p class="brand-slogan">臻选生活空间探索系统</p>
+  </div>
+
+  <!-- 登录表单 -->
+  <form class="login-form" id="login-form" novalidate>
+
+    <!-- 手机号 -->
+    <div class="input-group">
+      <label class="input-label" for="input-phone">手机号码</label>
+      <div class="input-wrap">
+        <input
+          id="input-phone"
+          class="input-field"
+          type="tel"
+          maxlength="11"
+          placeholder="请输入 11 位手机号"
+          autocomplete="tel"
+          inputmode="numeric"
+        />
+      </div>
+      <p class="field-hint" id="hint-phone"></p>
+    </div>
+
+    <!-- 验证码 -->
+    <div class="input-group">
+      <label class="input-label" for="input-code">验证码</label>
+      <div class="code-row">
+        <div class="input-wrap">
+          <input
+            id="input-code"
+            class="input-field"
+            type="text"
+            maxlength="6"
+            placeholder="6 位验证码"
+            autocomplete="one-time-code"
+            inputmode="numeric"
+          />
+        </div>
+        <button
+          type="button"
+          class="btn btn-outline"
+          id="btn-send-code"
+        >
+          发送验证码
+        </button>
+      </div>
+      <p class="field-hint" id="hint-code"></p>
+    </div>
+
+    <!-- 开发提示 -->
+    <div class="dev-hint" id="dev-hint" style="display:none">
+      📋 验证码已打印至后端控制台，请查看终端输出
+    </div>
+
+    <!-- 登录按钮 -->
+    <button
+      type="submit"
+      class="btn btn-primary btn-block"
+      id="btn-login"
+    >
+      登录 / 注册
+    </button>
+
+    <!-- 免责声明 -->
+    <p class="disclaimer">
+      登录即代表同意
+      <a href="#" id="link-terms">用户协议</a>
+      与
+      <a href="#" id="link-privacy">隐私政策</a>
+    </p>
+
+  </form>
+
+</div>
+
+<script type="module">
+  import { UserAPI } from './js/api.js';
+  import { TokenManager, UserCache, isValidPhone, isValidCode, startCountdown, toast, navigate } from './js/utils.js';
+
+  /* ---- 如果已登录，直接跳首页 ---- */
+  if (TokenManager.exists()) {
+    navigate('/frontend/index.html');
+  }
+
+  /* ---- DOM 引用 ---- */
+  const phoneInput   = document.getElementById('input-phone');
+  const codeInput    = document.getElementById('input-code');
+  const btnSendCode  = document.getElementById('btn-send-code');
+  const btnLogin     = document.getElementById('btn-login');
+  const hintPhone    = document.getElementById('hint-phone');
+  const hintCode     = document.getElementById('hint-code');
+  const devHint      = document.getElementById('dev-hint');
+  const loginForm    = document.getElementById('login-form');
+
+  /* ---- 实时校验手机号 ---- */
+  phoneInput.addEventListener('input', () => {
+    const val = phoneInput.value.replace(/\D/g, '');
+    phoneInput.value = val;
+
+    phoneInput.classList.remove('error', 'valid');
+    hintPhone.textContent = '';
+    hintPhone.className = 'field-hint';
+
+    if (val.length === 11) {
+      if (isValidPhone(val)) {
+        phoneInput.classList.add('valid');
+        hintPhone.textContent = '✓ 格式正确';
+        hintPhone.classList.add('valid');
+      } else {
+        phoneInput.classList.add('error');
+        hintPhone.textContent = '手机号格式不正确';
+        hintPhone.classList.add('error');
+      }
+    }
+  });
+
+  /* ---- 实时校验验证码 ---- */
+  codeInput.addEventListener('input', () => {
+    const val = codeInput.value.replace(/\D/g, '');
+    codeInput.value = val;
+
+    codeInput.classList.remove('error', 'valid');
+    hintCode.textContent = '';
+    hintCode.className = 'field-hint';
+
+    if (val.length === 6) {
+      codeInput.classList.add('valid');
+      hintCode.textContent = '✓';
+      hintCode.classList.add('valid');
+    }
+  });
+
+  /* ---- 发送验证码 ---- */
+  btnSendCode.addEventListener('click', async () => {
+    const phone = phoneInput.value.trim();
+
+    if (!phone) {
+      phoneInput.focus();
+      toast.warning('请先输入手机号');
+      return;
+    }
+    if (!isValidPhone(phone)) {
+      phoneInput.classList.add('error');
+      hintPhone.textContent = '请输入正确的手机号';
+      hintPhone.className = 'field-hint error';
+      phoneInput.focus();
+      return;
+    }
+
+    btnSendCode.disabled = true;
+    btnSendCode.textContent = '发送中...';
+
+    try {
+      const res = await UserAPI.sendCode(phone);
+
+      if (res && res.success) {
+        toast.success('验证码已发送，请查看控制台');
+        devHint.style.display = 'block';
+        startCountdown(btnSendCode, 60, '发送验证码');
+        codeInput.focus();
+      } else {
+        toast.error(res?.errorMsg || '发送失败，请重试');
+        btnSendCode.disabled = false;
+        btnSendCode.textContent = '发送验证码';
+      }
+    } catch (err) {
+      toast.error('网络异常，请检查后端服务是否启动');
+      btnSendCode.disabled = false;
+      btnSendCode.textContent = '发送验证码';
+    }
+  });
+
+  /* ---- 登录提交 ---- */
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const phone = phoneInput.value.trim();
+    const code  = codeInput.value.trim();
+    let valid = true;
+
+    // 校验手机号
+    if (!isValidPhone(phone)) {
+      phoneInput.classList.add('error');
+      hintPhone.textContent = '请输入正确的手机号';
+      hintPhone.className = 'field-hint error';
+      valid = false;
+    }
+
+    // 校验验证码
+    if (!isValidCode(code)) {
+      codeInput.classList.add('error');
+      hintCode.textContent = '请输入 6 位验证码';
+      hintCode.className = 'field-hint error';
+      valid = false;
+    }
+
+    if (!valid) return;
+
+    // 登录请求
+    setLoading(true);
+
+    try {
+      const res = await UserAPI.login({ phone, code });
+
+      if (res && res.success) {
+        const token = res.data;
+        TokenManager.set(token);
+        toast.success('登录成功，欢迎回来！');
+
+        // 延迟跳转（让 toast 显示）
+        setTimeout(() => navigate('/frontend/index.html'), 800);
+      } else {
+        toast.error(res?.errorMsg || '登录失败，请检查验证码');
+        codeInput.classList.add('error');
+        hintCode.textContent = res?.errorMsg || '验证码错误';
+        hintCode.className = 'field-hint error';
+        setLoading(false);
+      }
+    } catch (err) {
+      toast.error('网络异常，请检查后端服务是否启动');
+      setLoading(false);
+    }
+  });
+
+  /* ---- 工具：设置加载状态 ---- */
+  function setLoading(loading) {
+    if (loading) {
+      btnLogin.classList.add('loading');
+      btnLogin.disabled = true;
+      btnLogin.textContent = '登录中';
+    } else {
+      btnLogin.classList.remove('loading');
+      btnLogin.disabled = false;
+      btnLogin.textContent = '登录 / 注册';
+    }
+  }
+
+  /* ---- 回车键快捷操作 ---- */
+  phoneInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') codeInput.focus();
+  });
+
+  codeInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') loginForm.dispatchEvent(new Event('submit'));
+  });
+</script>
+
+</body>
+</html>

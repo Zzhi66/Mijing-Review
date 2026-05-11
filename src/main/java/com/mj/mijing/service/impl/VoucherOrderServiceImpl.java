@@ -147,7 +147,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
         try {
             // DB 层幂等校验
-            int count = query().eq("user_id", userId).eq("voucher_id", voucherId).count();
+            int count = query().eq("user_id", userId).eq("voucher_id", voucherId).count().intValue();
             if (count > 0) {
                 log.warn("用户已购买，userId={}, voucherId={}", userId, voucherId);
                 return;

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="description" content="觅境点评 —— 探索你身边的臻选生活空间" />
+  <title>觅境点评 · 首页</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="./css/common.css" />
+  <style>
+    body { background: var(--color-bg); }
+
+    /* ── 顶部导航 ── */
+    .top-nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--color-border-light);
+      padding: 0 16px;
+    }
+    .nav-inner {
+      max-width: 900px; margin: 0 auto;
+      height: 60px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .nav-logo {
+      font-size: 20px; font-weight: 800; letter-spacing: -0.03em;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      white-space: nowrap;
+    }
+    .nav-search {
+      flex: 1; position: relative;
+    }
+    .nav-search input {
+      width: 100%; height: 38px; padding: 0 16px 0 40px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-full);
+      font-size: 14px; background: var(--color-bg);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .nav-search input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(255,92,92,.1);
+      outline: none;
+    }
+    .nav-search .search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-size: 16px; color: var(--color-text-muted); pointer-events: none;
+    }
+    .nav-user {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--gradient-primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(255,92,92,.3);
+      transition: transform .2s;
+    }
+    .user-avatar:hover { transform: scale(1.08); }
+    #btn-logout {
+      font-size: 13px; padding: 6px 14px;
+      border-radius: var(--radius-full);
+      border: 1.5px solid var(--color-border);
+      color: var(--color-text-secondary);
+      background: transparent; cursor: pointer;
+      transition: all .2s;
+    }
+    #btn-logout:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    #btn-login-nav {
+      font-size: 13px; font-weight: 600; padding: 7px 16px;
+      background: var(--gradient-primary); color: #fff;
+      border-radius: var(--radius-full); border: none; cursor: pointer;
+      box-shadow: var(--shadow-primary);
+    }
+
+    /* ── 主内容区 ── */
+    .main-content {
+      max-width: 900px; margin: 0 auto;
+      padding: 20px 16px 80px;
+    }
+
+    /* ── Hero Banner ── */
+    .hero-banner {
+      background: var(--gradient-hero);
+      border-radius: 20px;
+      padding: 28px 28px 24px;
+      margin-bottom: 24px;
+      position: relative; overflow: hidden;
+      animation: fadeIn .5s ease;
+    }
+    .hero-banner::before {
+      content: '';
+      position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(255,92,92,.25) 0%, transparent 70%);
+    }
+    .hero-banner::after {
+      content: '';
+      position: absolute; bottom: -30px; left: 60px;
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(255,154,60,.2) 0%, transparent 70%);
+    }
+    .hero-title { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .hero-title span { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-sub { font-size: 14px; color: rgba(255,255,255,.65); margin-bottom: 20px; }
+    .hero-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hero-tag {
+      padding: 5px 14px; border-radius: var(--radius-full);
+      background: rgba(255,255,255,.1); color: rgba(255,255,255,.85);
+      font-size: 12px; border: 1px solid rgba(255,255,255,.15);
+      cursor: pointer; transition: background .2s;
+    }
+    .hero-tag:hover { background: rgba(255,255,255,.2); }
+
+    /* ── 分类 Tab ── */
+    .section-title {
+      font-size: 18px; font-weight: 700; color: var(--color-text-primary);
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::before {
+      content: '';
+      display: inline-block; width: 4px; height: 18px;
+      background: var(--gradient-primary); border-radius: 2px;
+    }
+    .type-tabs {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .type-tab {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 10px 14px; border-radius: var(--radius-md);
+      background: var(--color-surface); border: 1.5px solid var(--color-border-light);
+      cursor: pointer; transition: all .2s; min-width: 64px;
+    }
+    .type-tab:hover { border-color: var(--color-primary); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .type-tab.active {
+      border-color: var(--color-primary); background: var(--color-primary-bg);
+      box-shadow: 0 4px 12px rgba(255,92,92,.15);
+    }
+    .type-tab .type-icon { font-size: 22px; line-height: 1; }
+    .type-tab .type-name { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); white-space: nowrap; }
+    .type-tab.active .type-name { color: var(--color-primary); font-weight: 600; }
+
+    /* ── 商铺列表 ── */
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px; margin-bottom: 32px;
+    }
+    .shop-card {
+      background: var(--color-surface); border-radius: 16px;
+      border: 1px solid var(--color-border-light);
+      overflow: hidden; cursor: pointer;
+      transition: transform .25s, box-shadow .25s;
+      animation: fadeIn .4s ease;
+    }
+    .shop-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .shop-img {
+      width: 100%; height: 160px; object-fit: cover;
+      background: linear-gradient(135deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px; color: #ddd;
+      position: relative; overflow: hidden;
+    }
+    .shop-img img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+    .shop-info { padding: 14px; }
+    .shop-name {
+      font-size: 16px; font-weight: 700; color: var(--color-text-primary);
+      margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .shop-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .shop-score {
+      display: flex; align-items: center; gap: 3px;
+      font-size: 13px; font-weight: 700; color: var(--color-accent);
+    }
+    .shop-sold { font-size: 12px; color: var(--color-text-muted); }
+    .shop-addr { font-size: 12px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .shop-distance { font-size: 12px; color: var(--color-primary); font-weight: 500; }
+    .shop-price {
+      display: inline-block; margin-top: 6px;
+      font-size: 12px; color: var(--color-text-secondary);
+    }
+    .shop-price strong { color: var(--color-primary); font-size: 15px; font-weight: 700; }
+
+    /* 加载更多 */
+    .load-more-wrap { text-align: center; padding: 8px 0; }
+    #btn-load-more {
+      padding: 10px 32px; border-radius: var(--radius-full);
+      border: 1.5px solid var(--color-border); font-size: 14px;
+      color: var(--color-text-secondary); background: #fff; cursor: pointer;
+      transition: all .2s;
+    }
+    #btn-load-more:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    #btn-load-more:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── 热门笔记 ── */
+    .blog-list { display: flex; flex-direction: column; gap: 12px; }
+    .blog-card {
+      display: flex; gap: 14px; padding: 14px;
+      background: var(--color-surface); border-radius: 16px;
+      border: 1px solid var(--color-border-light);
+      cursor: pointer; transition: all .25s;
+      animation: fadeIn .4s ease;
+    }
+    .blog-card:hover { transform: translateX(4px); box-shadow: var(--shadow-md); }
+    .blog-thumb {
+      flex-shrink: 0; width: 90px; height: 68px; border-radius: 10px;
+      background: #f0f0f0; overflow: hidden; position: relative;
+      display: flex; align-items: center; justify-content: center; font-size: 28px; color: #ddd;
+    }
+    .blog-thumb img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+    .blog-content { flex: 1; min-width: 0; }
+    .blog-title {
+      font-size: 15px; font-weight: 600; color: var(--color-text-primary);
+      margin-bottom: 6px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .blog-footer { display: flex; align-items: center; gap: 10px; }
+    .blog-author { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--color-text-muted); }
+    .blog-author-icon { width: 18px; height: 18px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    .blog-likes { margin-left: auto; display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--color-text-muted); }
+
+    /* 空状态 & 骨架 */
+    .shop-skeleton { background: var(--color-surface); border-radius: 16px; overflow: hidden; }
+    .sk-img { height: 160px; }
+    .sk-body { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .sk-line { height: 14px; border-radius: 4px; }
+    .sk-short { width: 60%; }
+  </style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<nav class="top-nav">
+  <div class="nav-inner">
+    <div class="nav-logo">觅境点评</div>
+    <div class="nav-search">
+      <span class="search-icon">🔍</span>
+      <input id="search-input" type="search" placeholder="搜索商铺、美食、体验..." />
+    </div>
+    <div class="nav-user" id="nav-user-area">
+      <!-- JS 动态渲染 -->
+    </div>
+  </div>
+</nav>
+
+<!-- 主内容 -->
+<main class="main-content">
+
+  <!-- Hero -->
+  <section class="hero-banner fade-in">
+    <div class="hero-title">探索<span>臻选</span>生活空间</div>
+    <div class="hero-sub">发现你身边最值得去的餐厅、咖啡厅、体验馆</div>
+    <div class="hero-tags">
+      <span class="hero-tag">🍜 美食</span>
+      <span class="hero-tag">☕ 咖啡</span>
+      <span class="hero-tag">💆 养生</span>
+      <span class="hero-tag">🎭 娱乐</span>
+      <span class="hero-tag">🛍 购物</span>
+    </div>
+  </section>
+
+  <!-- 商铺分类 Tab -->
+  <section>
+    <div class="section-title">商铺分类</div>
+    <div class="type-tabs" id="type-tabs">
+      <!-- 骨架 -->
+      <div class="type-tab" style="opacity:.4"><div class="type-icon skeleton" style="width:22px;height:22px;border-radius:4px"></div><div class="type-name skeleton" style="width:32px;height:10px"></div></div>
+    </div>
+  </section>
+
+  <!-- 商铺列表 -->
+  <section>
+    <div class="section-title" id="shop-section-title">全部商铺</div>
+    <div class="shop-grid" id="shop-grid">
+      <!-- 骨架屏 -->
+      <div class="shop-skeleton"><div class="sk-img skeleton"></div><div class="sk-body"><div class="sk-line skeleton"></div><div class="sk-line skeleton sk-short"></div><div class="sk-line skeleton sk-short" style="width:40%"></div></div></div>
+      <div class="shop-skeleton"><div class="sk-img skeleton"></div><div class="sk-body"><div class="sk-line skeleton"></div><div class="sk-line skeleton sk-short"></div><div class="sk-line skeleton sk-short" style="width:40%"></div></div></div>
+      <div class="shop-skeleton"><div class="sk-img skeleton"></div><div class="sk-body"><div class="sk-line skeleton"></div><div class="sk-line skeleton sk-short"></div></div></div>
+    </div>
+    <div class="load-more-wrap">
+      <button id="btn-load-more" disabled>加载更多</button>
+    </div>
+  </section>
+
+  <!-- 热门笔记 -->
+  <section>
+    <div class="section-title" style="margin-top:8px">热门探店</div>
+    <div class="blog-list" id="blog-list">
+      <!-- JS 动态渲染 -->
+    </div>
+  </section>
+
+</main>
+
+<script type="module">
+import { ShopTypeAPI, ShopAPI, BlogAPI, UserAPI } from './js/api.js';
+import { TokenManager, UserCache, toast, navigate, formatCount } from './js/utils.js';
+
+/* ── 状态 ── */
+let currentTypeId = null;
+let currentPage = 1;
+let hasMore = true;
+let loading = false;
+
+/* ── 初始化 ── */
+async function init() {
+  renderNavUser();
+  await Promise.all([loadTypes(), loadShops(), loadBlogs()]);
+}
+
+/* ── 导航栏用户区域 ── */
+function renderNavUser() {
+  const area = document.getElementById('nav-user-area');
+  if (TokenManager.exists()) {
+    const user = UserCache.get();
+    area.innerHTML = `
+      <div class="user-avatar" title="${user?.nickName || '我的'}">😊</div>
+      <button id="btn-logout">退出</button>`;
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      await UserAPI.logout();
+      UserCache.clear();
+      toast.success('已退出登录');
+      setTimeout(() => navigate('/frontend/login.html'), 600);
+    });
+  } else {
+    area.innerHTML = `<button id="btn-login-nav" onclick="location.href='/frontend/login.html'">登录</button>`;
+  }
+}
+
+/* ── 商铺分类 ── */
+async function loadTypes() {
+  const res = await ShopTypeAPI.list().catch(() => null);
+  const tabs = document.getElementById('type-tabs');
+  if (!res?.success || !res.data?.length) {
+    tabs.innerHTML = '<span style="color:var(--color-text-muted);font-size:13px">暂无分类数据</span>';
+    return;
+  }
+  const types = res.data;
+  tabs.innerHTML = types.map(t => `
+    <div class="type-tab" data-id="${t.id}" data-name="${t.name}">
+      <span class="type-icon">${iconFor(t.name)}</span>
+      <span class="type-name">${t.name}</span>
+    </div>`).join('');
+
+  tabs.querySelectorAll('.type-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentTypeId = Number(tab.dataset.id);
+      currentPage = 1; hasMore = true;
+      document.getElementById('shop-section-title').textContent = tab.dataset.name + '商铺';
+      document.getElementById('shop-grid').innerHTML = '';
+      document.getElementById('btn-load-more').disabled = false;
+      loadShops();
+    });
+  });
+}
+
+/* ── 商铺列表 ── */
+async function loadShops() {
+  if (loading || !hasMore) return;
+  loading = true;
+  const btn = document.getElementById('btn-load-more');
+  btn.textContent = '加载中...'; btn.disabled = true;
+
+  const res = await ShopAPI.getByType(currentTypeId || 1, currentPage).catch(() => null);
+  loading = false;
+
+  if (!res?.success) {
+    toast.error('获取商铺列表失败');
+    btn.textContent = '重试'; btn.disabled = false;
+    return;
+  }
+
+  const shops = res.data || [];
+  const grid = document.getElementById('shop-grid');
+
+  if (currentPage === 1) grid.innerHTML = '';
+
+  if (!shops.length && currentPage === 1) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🏪</div><div class="empty-text">该分类暂无商铺</div></div>';
+    btn.style.display = 'none'; return;
+  }
+
+  shops.forEach(shop => { grid.appendChild(createShopCard(shop)); });
+
+  hasMore = shops.length >= 5;
+  currentPage++;
+  btn.textContent = hasMore ? '加载更多' : '没有更多了';
+  btn.disabled = !hasMore;
+}
+
+function createShopCard(shop) {
+  const el = document.createElement('div');
+  el.className = 'shop-card';
+  const imgUrl = shop.images?.split(',')[0] || '';
+  const stars = '⭐'.repeat(Math.min(5, Math.round((shop.score || 0) / 10)));
+  el.innerHTML = `
+    <div class="shop-img">
+      🏪
+      ${imgUrl ? `<img src="${imgUrl}" alt="${shop.name}" loading="lazy" onerror="this.remove()">` : ''}
+    </div>
+    <div class="shop-info">
+      <div class="shop-name">${shop.name}</div>
+      <div class="shop-meta">
+        <span class="shop-score">${stars} ${((shop.score || 0) / 10).toFixed(1)}</span>
+        <span class="shop-sold">月售 ${shop.sold || 0}</span>
+      </div>
+      <div class="shop-addr">${shop.district || ''}${shop.address || ''}</div>
+      ${shop.distance ? `<div class="shop-distance">📍 ${formatDist(shop.distance)}</div>` : ''}
+      ${shop.avgPrice ? `<div class="shop-price">人均 <strong>¥${shop.avgPrice}</strong></div>` : ''}
+    </div>`;
+  el.addEventListener('click', () => navigate(`/frontend/shop.html?id=${shop.id}`));
+  return el;
+}
+
+/* ── 热门笔记 ── */
+async function loadBlogs() {
+  const res = await BlogAPI.getHot(1).catch(() => null);
+  const list = document.getElementById('blog-list');
+  if (!res?.success || !res.data?.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-text">暂无热门笔记</div></div>';
+    return;
+  }
+  res.data.forEach(blog => { list.appendChild(createBlogCard(blog)); });
+}
+
+function createBlogCard(blog) {
+  const el = document.createElement('div');
+  el.className = 'blog-card';
+  const imgUrl = blog.images?.split(',')[0] || '';
+  el.innerHTML = `
+    <div class="blog-thumb">
+      📝
+      ${imgUrl ? `<img src="${imgUrl}" alt="${blog.title}" loading="lazy" onerror="this.remove()">` : ''}
+    </div>
+    <div class="blog-content">
+      <div class="blog-title">${blog.title || '探店笔记'}</div>
+      <div class="blog-footer">
+        <div class="blog-author">
+          <div class="blog-author-icon">😊</div>
+          <span>${blog.name || '用户'}</span>
+        </div>
+        <div class="blog-likes">❤️ ${formatCount(blog.liked || 0)}</div>
+      </div>
+    </div>`;
+  el.addEventListener('click', () => navigate(`/frontend/blog-detail.html?id=${blog.id}`));
+  return el;
+}
+
+/* ── 工具 ── */
+function formatDist(km) {
+  return km < 1 ? `${(km * 1000).toFixed(0)}m` : `${km.toFixed(1)}km`;
+}
+
+function iconFor(name = '') {
+  const map = { '美食': '🍜', '咖啡': '☕', '购物': '🛍', '娱乐': '🎭', '酒店': '🏨', '养生': '💆', '学习': '📚', '运动': '⚽', '旅游': '✈️', '其他': '🏪' };
+  for (const [k, v] of Object.entries(map)) { if (name.includes(k)) return v; }
+  return '🏪';
+}
+
+/* ── 加载更多按钮 ── */
+document.getElementById('btn-load-more').addEventListener('click', loadShops);
+
+/* ── 搜索（简单跳转） ── */
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    toast.info('搜索功能开发中...');
+  }
+});
+
+init();
+</script>
+</body>
+</html>

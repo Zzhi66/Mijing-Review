@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="description" content="觅境点评 —— 限时秒杀抢购" />
+  <title>限时秒杀 · 觅境点评</title>
+  <link rel="stylesheet" href="./css/common.css" />
+  <style>
+    body { background: var(--color-bg); }
+
+    /* ── 导航 ── */
+    .nav-bar {
+      position: sticky; top: 0; z-index: 100;
+      height: 56px; padding: 0 16px;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--color-border-light);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .nav-back {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--color-bg); border: none; cursor: pointer;
+      font-size: 18px; display: flex; align-items: center; justify-content: center;
+      transition: background .2s;
+    }
+    .nav-back:hover { background: var(--color-border); }
+    .nav-title { font-size: 17px; font-weight: 700; flex: 1; }
+
+    /* ── 主区域 ── */
+    .page-wrap {
+      max-width: 520px; margin: 0 auto;
+      padding: 20px 16px 80px;
+    }
+
+    /* ── 秒杀头图 ── */
+    .seckill-hero {
+      background: var(--gradient-hero);
+      border-radius: 20px; padding: 28px 24px;
+      margin-bottom: 20px; position: relative; overflow: hidden;
+      animation: fadeIn .5s ease;
+    }
+    .seckill-hero::before {
+      content: '⚡'; font-size: 120px; opacity: .06;
+      position: absolute; right: -10px; top: -20px; line-height: 1;
+    }
+    .seckill-label {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--gradient-primary); color: #fff;
+      font-size: 12px; font-weight: 700; padding: 4px 12px;
+      border-radius: var(--radius-full); margin-bottom: 12px;
+      letter-spacing: .05em;
+    }
+    .seckill-title {
+      font-size: 22px; font-weight: 800; color: #fff;
+      margin-bottom: 6px; line-height: 1.3;
+    }
+    .seckill-subtitle { font-size: 13px; color: rgba(255,255,255,.65); }
+    .price-row {
+      display: flex; align-items: flex-end; gap: 10px; margin-top: 16px;
+    }
+    .seckill-price { font-size: 36px; font-weight: 900; color: var(--color-primary); line-height: 1; }
+    .seckill-price span { font-size: 18px; }
+    .original-price {
+      font-size: 15px; color: rgba(255,255,255,.45);
+      text-decoration: line-through; padding-bottom: 4px;
+    }
+    .save-badge {
+      background: var(--color-primary); color: #fff;
+      font-size: 11px; font-weight: 700; padding: 3px 8px;
+      border-radius: var(--radius-full); padding-bottom: 4px;
+    }
+
+    /* ── 倒计时 ── */
+    .countdown-section {
+      background: var(--color-surface); border-radius: 16px;
+      padding: 20px; margin-bottom: 16px;
+      border: 1px solid var(--color-border-light);
+      animation: fadeIn .5s .1s ease both;
+    }
+    .countdown-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .countdown-label { font-size: 14px; font-weight: 600; color: var(--color-text-secondary); }
+    .status-badge {
+      font-size: 12px; font-weight: 700; padding: 3px 10px;
+      border-radius: var(--radius-full);
+    }
+    .status-badge.pending  { background: rgba(250,173,20,.12); color: var(--color-warning); }
+    .status-badge.active   { background: rgba(82,196,26,.12); color: var(--color-success); }
+    .status-badge.ended    { background: rgba(0,0,0,.06); color: var(--color-text-muted); }
+    .countdown-digits {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .cd-block {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .cd-num {
+      width: 52px; height: 52px; border-radius: 12px;
+      background: var(--gradient-hero); color: #fff;
+      font-size: 24px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      font-variant-numeric: tabular-nums;
+      transition: transform .15s;
+    }
+    .cd-num.tick { transform: scale(1.08); }
+    .cd-unit { font-size: 11px; color: var(--color-text-muted); font-weight: 500; }
+    .cd-sep { font-size: 22px; font-weight: 800; color: var(--color-primary); padding-bottom: 16px; }
+
+    /* 库存进度 */
+    .stock-section {
+      margin-top: 14px; padding-top: 14px;
+      border-top: 1px solid var(--color-border-light);
+    }
+    .stock-header {
+      display: flex; justify-content: space-between;
+      font-size: 13px; margin-bottom: 8px;
+    }
+    .stock-label { color: var(--color-text-secondary); }
+    .stock-num { font-weight: 700; color: var(--color-primary); }
+    .progress-bar {
+      height: 6px; background: var(--color-border-light);
+      border-radius: var(--radius-full); overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; border-radius: var(--radius-full);
+      background: var(--gradient-primary);
+      transition: width .6s ease;
+    }
+
+    /* ── 规则卡片 ── */
+    .rules-card {
+      background: var(--color-surface); border-radius: 16px;
+      padding: 18px; margin-bottom: 16px;
+      border: 1px solid var(--color-border-light);
+      animation: fadeIn .5s .2s ease both;
+    }
+    .rules-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--color-text-primary); }
+    .rule-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 13px; color: var(--color-text-secondary);
+      line-height: 1.6; padding: 3px 0;
+    }
+    .rule-dot { color: var(--color-primary); font-size: 16px; line-height: 1.6; flex-shrink: 0; }
+
+    /* ── 底部操作 ── */
+    .bottom-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(255,255,255,0.96); backdrop-filter: blur(16px);
+      border-top: 1px solid var(--color-border-light);
+      padding: 12px 20px; z-index: 100;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .bottom-price-info { flex: 1; }
+    .bottom-label { font-size: 11px; color: var(--color-text-muted); margin-bottom: 2px; }
+    .bottom-price { font-size: 22px; font-weight: 900; color: var(--color-primary); }
+    .bottom-price span { font-size: 14px; }
+
+    #btn-seckill {
+      min-width: 140px; height: 50px;
+      font-size: 16px; font-weight: 700;
+      border-radius: var(--radius-full);
+      background: var(--gradient-primary); color: #fff;
+      border: none; cursor: pointer;
+      box-shadow: var(--shadow-primary);
+      transition: all .2s; position: relative; overflow: hidden;
+    }
+    #btn-seckill:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(255,92,92,.45);
+    }
+    #btn-seckill:active:not(:disabled) { transform: scale(.97); }
+    #btn-seckill:disabled {
+      background: linear-gradient(135deg,#ddd,#ccc);
+      box-shadow: none; cursor: not-allowed;
+    }
+    #btn-seckill.loading::after {
+      content: ''; width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%; animation: spin .7s linear infinite;
+      display: inline-block; margin-left: 8px; vertical-align: middle;
+    }
+
+    /* ── 结果弹窗 ── */
+    .result-mask {
+      position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      z-index: 200; display: none; align-items: center; justify-content: center;
+    }
+    .result-mask.show { display: flex; }
+    .result-dialog {
+      background: #fff; border-radius: 24px; padding: 36px 28px;
+      width: 300px; text-align: center;
+      animation: cardIn .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes cardIn {
+      from { opacity:0; transform:scale(.85) translateY(20px); }
+      to   { opacity:1; transform:scale(1) translateY(0); }
+    }
+    .result-icon { font-size: 64px; margin-bottom: 12px; }
+    .result-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .result-desc { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 24px; line-height: 1.6; }
+    .result-btn {
+      width: 100%; height: 48px; border-radius: var(--radius-full);
+      background: var(--gradient-primary); color: #fff;
+      font-size: 15px; font-weight: 700; border: none; cursor: pointer;
+    }
+    .result-btn-ghost {
+      width: 100%; height: 40px; border-radius: var(--radius-full);
+      background: transparent; color: var(--color-text-secondary);
+      font-size: 14px; border: 1.5px solid var(--color-border); cursor: pointer; margin-top: 10px;
+    }
+
+    /* 骨架 */
+    .page-skeleton { animation: fadeIn .3s ease; }
+    .page-skeleton .sk-hero { height: 180px; border-radius: 20px; margin-bottom: 20px; }
+    .page-skeleton .sk-card { height: 140px; border-radius: 16px; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+
+<!-- 导航栏 -->
+<nav class="nav-bar">
+  <button class="nav-back" id="btn-back" aria-label="返回">←</button>
+  <span class="nav-title">限时秒杀</span>
+</nav>
+
+<!-- 骨架屏（加载中） -->
+<div class="page-wrap page-skeleton" id="skeleton">
+  <div class="sk-hero skeleton"></div>
+  <div class="sk-card skeleton"></div>
+  <div class="sk-card skeleton" style="height:100px"></div>
+</div>
+
+<!-- 主内容（加载后显示） -->
+<div class="page-wrap" id="page-content" style="display:none">
+
+  <!-- 秒杀头图 -->
+  <div class="seckill-hero">
+    <div class="seckill-label">⚡ 限时秒杀</div>
+    <div class="seckill-title" id="voucher-title">加载中…</div>
+    <div class="seckill-subtitle" id="voucher-subtitle"></div>
+    <div class="price-row">
+      <div class="seckill-price"><span>¥</span><span id="pay-value">—</span></div>
+      <div class="original-price" id="actual-value"></div>
+      <div class="save-badge" id="save-badge" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- 倒计时 -->
+  <div class="countdown-section">
+    <div class="countdown-header">
+      <span class="countdown-label" id="cd-label">活动时间</span>
+      <span class="status-badge" id="status-badge">—</span>
+    </div>
+    <div class="countdown-digits">
+      <div class="cd-block">
+        <div class="cd-num" id="cd-h">00</div>
+        <div class="cd-unit">时</div>
+      </div>
+      <div class="cd-sep">:</div>
+      <div class="cd-block">
+        <div class="cd-num" id="cd-m">00</div>
+        <div class="cd-unit">分</div>
+      </div>
+      <div class="cd-sep">:</div>
+      <div class="cd-block">
+        <div class="cd-num" id="cd-s">00</div>
+        <div class="cd-unit">秒</div>
+      </div>
+    </div>
+
+    <!-- 库存进度 -->
+    <div class="stock-section" id="stock-section" style="display:none">
+      <div class="stock-header">
+        <span class="stock-label">剩余库存</span>
+        <span class="stock-num" id="stock-num">—</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 活动规则 -->
+  <div class="rules-card">
+    <div class="rules-title">📋 活动规则</div>
+    <div class="rule-item"><span class="rule-dot">·</span><span>每人限购 1 张，先到先得</span></div>
+    <div class="rule-item"><span class="rule-dot">·</span><span>优惠券购买后请在有效期内使用</span></div>
+    <div class="rule-item"><span class="rule-dot">·</span><span id="rule-time">活动时间：加载中…</span></div>
+    <div class="rule-item"><span class="rule-dot">·</span><span>仅限到店消费，不可叠加使用</span></div>
+  </div>
+
+</div>
+
+<!-- 底部操作栏 -->
+<div class="bottom-bar" id="bottom-bar" style="display:none">
+  <div class="bottom-price-info">
+    <div class="bottom-label">秒杀价</div>
+    <div class="bottom-price"><span>¥</span><span id="bottom-price-num">—</span></div>
+  </div>
+  <button id="btn-seckill">立即抢购</button>
+</div>
+
+<!-- 结果弹窗 -->
+<div class="result-mask" id="result-mask">
+  <div class="result-dialog">
+    <div class="result-icon" id="result-icon">🎉</div>
+    <div class="result-title" id="result-title">抢购成功！</div>
+    <div class="result-desc" id="result-desc">优惠券已放入账户，请到店出示使用</div>
+    <button class="result-btn" id="result-btn-back">返回首页</button>
+    <button class="result-btn-ghost" id="result-btn-close">继续浏览</button>
+  </div>
+</div>
+
+<script type="module">
+import { VoucherAPI, VoucherOrderAPI } from './js/api.js';
+import { TokenManager, toast, navigate, getQuery, requireLogin } from './js/utils.js';
+
+/* ── 状态 ── */
+let voucher = null;
+let countdownTimer = null;
+let seckillDone = false;
+const voucherId = getQuery('id');
+
+/* ── 返回 ── */
+document.getElementById('btn-back').addEventListener('click', () => history.length > 1 ? history.back() : navigate('/frontend/index.html'));
+
+/* ── 初始化 ── */
+async function init() {
+  if (!voucherId) { toast.error('参数错误'); return; }
+
+  // 从 URL 获取 shopId 加载优惠券列表
+  const shopId = getQuery('shopId');
+  if (!shopId) { showError('缺少商铺参数'); return; }
+
+  const res = await VoucherAPI.listByShop(shopId).catch(() => null);
+  if (!res?.success || !res.data?.length) { showError('暂无秒杀优惠券'); return; }
+
+  // 找到对应 voucherId 的秒杀券
+  voucher = res.data.find(v => String(v.id) === voucherId && v.type === 1);
+  if (!voucher) {
+    // 如果没有 type 区分，取第一个有 beginTime 的
+    voucher = res.data.find(v => v.beginTime) || res.data[0];
+  }
+  if (!voucher) { showError('秒杀券不存在'); return; }
+
+  renderVoucher();
+  startCountdown();
+  document.getElementById('skeleton').style.display = 'none';
+  document.getElementById('page-content').style.display = 'block';
+  document.getElementById('bottom-bar').style.display = 'flex';
+}
+
+/* ── 渲染券信息 ── */
+function renderVoucher() {
+  document.getElementById('voucher-title').textContent = voucher.title || '限时秒杀优惠券';
+  document.getElementById('voucher-subtitle').textContent = voucher.subTitle || '';
+
+  const pay = (voucher.payValue || 0) / 100;
+  const actual = (voucher.actualValue || 0) / 100;
+  document.getElementById('pay-value').textContent = pay.toFixed(0);
+  document.getElementById('bottom-price-num').textContent = pay.toFixed(0);
+
+  if (actual > pay) {
+    document.getElementById('actual-value').textContent = `¥${actual.toFixed(0)}`;
+    const save = actual - pay;
+    const badge = document.getElementById('save-badge');
+    badge.textContent = `省¥${save.toFixed(0)}`;
+    badge.style.display = 'inline-block';
+  }
+
+  // 库存（若有）
+  if (voucher.stock != null) {
+    const maxStock = 100; // 假设最大100
+    const pct = Math.max(5, Math.min(100, (voucher.stock / maxStock) * 100));
+    document.getElementById('stock-num').textContent = `${voucher.stock} 件`;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('stock-section').style.display = 'block';
+  }
+
+  // 规则时间
+  const fmt = t => t ? new Date(t).toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+  document.getElementById('rule-time').textContent = `活动时间：${fmt(voucher.beginTime)} ~ ${fmt(voucher.endTime)}`;
+}
+
+/* ── 倒计时 ── */
+function startCountdown() {
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
+function tick() {
+  const now = Date.now();
+  const begin = voucher.beginTime ? new Date(voucher.beginTime).getTime() : null;
+  const end   = voucher.endTime   ? new Date(voucher.endTime).getTime()   : null;
+  const btn = document.getElementById('btn-seckill');
+  const badge = document.getElementById('status-badge');
+  const label = document.getElementById('cd-label');
+
+  if (!begin || !end) { setCountdown(0, 0, 0); return; }
+
+  if (now < begin) {
+    // 未开始
+    badge.textContent = '即将开始'; badge.className = 'status-badge pending';
+    label.textContent = '距开始';
+    setCountdown(begin - now);
+    btn.disabled = true; btn.textContent = '活动未开始';
+  } else if (now <= end) {
+    // 进行中
+    badge.textContent = '进行中'; badge.className = 'status-badge active';
+    label.textContent = '距结束';
+    setCountdown(end - now);
+    if (!seckillDone) { btn.disabled = false; btn.textContent = '立即抢购'; }
+  } else {
+    // 已结束
+    badge.textContent = '已结束'; badge.className = 'status-badge ended';
+    label.textContent = '活动已结束';
+    setCountdown(0, 0, 0);
+    btn.disabled = true; btn.textContent = '活动已结束';
+    clearInterval(countdownTimer);
+  }
+}
+
+function setCountdown(ms) {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = n => String(n).padStart(2, '0');
+  updateDigit('cd-h', pad(h));
+  updateDigit('cd-m', pad(m));
+  updateDigit('cd-s', pad(s));
+}
+
+function updateDigit(id, val) {
+  const el = document.getElementById(id);
+  if (el.textContent !== val) {
+    el.textContent = val;
+    el.classList.add('tick');
+    setTimeout(() => el.classList.remove('tick'), 150);
+  }
+}
+
+/* ── 秒杀下单 ── */
+document.getElementById('btn-seckill').addEventListener('click', async () => {
+  if (!TokenManager.exists()) {
+    toast.warning('请先登录');
+    setTimeout(() => navigate('/frontend/login.html'), 800);
+    return;
+  }
+  if (seckillDone) return;
+
+  const btn = document.getElementById('btn-seckill');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.textContent = '抢购中';
+
+  try {
+    const res = await VoucherOrderAPI.seckill(voucherId);
+    btn.classList.remove('loading');
+
+    if (res?.success) {
+      seckillDone = true;
+      showResult(true, res.data);
+    } else {
+      btn.disabled = false;
+      btn.textContent = '立即抢购';
+      const msg = res?.errorMsg || '抢购失败，请重试';
+      if (msg.includes('库存')) {
+        showResult(false, null, '很遗憾，库存已抢完');
+      } else if (msg.includes('一张') || msg.includes('一人')) {
+        showResult(false, null, '您已参与过本次秒杀');
+      } else {
+        toast.error(msg);
+      }
+    }
+  } catch {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    btn.textContent = '立即抢购';
+    toast.error('网络异常，请检查服务是否启动');
+  }
+});
+
+/* ── 结果弹窗 ── */
+function showResult(success, orderId, failMsg) {
+  const mask = document.getElementById('result-mask');
+  document.getElementById('result-icon').textContent  = success ? '🎉' : '😔';
+  document.getElementById('result-title').textContent = success ? '抢购成功！' : '抢购失败';
+  document.getElementById('result-desc').textContent  = success
+    ? `订单号：${orderId}\n优惠券已入账，请到店出示使用`
+    : (failMsg || '很遗憾，未能抢到');
+  mask.classList.add('show');
+}
+
+function showError(msg) {
+  document.getElementById('skeleton').style.display = 'none';
+  document.getElementById('page-content').style.display = 'block';
+  document.getElementById('page-content').innerHTML = `
+    <div class="empty-state" style="min-height:60vh">
+      <div class="empty-icon">😕</div>
+      <div class="empty-text">${msg}</div>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="navigate('/frontend/index.html')">返回首页</button>
+    </div>`;
+}
+
+document.getElementById('result-btn-back').addEventListener('click', () => navigate('/frontend/index.html'));
+document.getElementById('result-btn-close').addEventListener('click', () => {
+  document.getElementById('result-mask').classList.remove('show');
+});
+
+init();
+</script>
+</body>
+</html>

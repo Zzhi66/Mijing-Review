@@ -56,7 +56,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     @Override
     public Result isFollow(Long followUserId) {
         Long userId = UserHolder.getUser().getId();
-        int count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count();
+        int count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count().intValue();
         return Result.ok(count > 0);
     }
 
