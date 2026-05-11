@@ -25,10 +25,14 @@
 
 ## 🖼️ 界面预览
 
-| 登录页 | 首页 | AI 客服 |
-|:---:|:---:|:---:|
-| 手机验证码登录 | 分类 Tab + 商铺卡片 | 智能对话聊天界面 |
-| 渐变品牌设计 | GEO 附近商铺 | 打字动画 + Markdown |
+#登录页
+<img width="533" height="760" alt="image" src="https://github.com/user-attachments/assets/3a69c309-270c-450d-ad40-579f353c5831" />
+
+
+
+#AI客服
+<img width="1918" height="911" alt="image" src="https://github.com/user-attachments/assets/0256ccef-87bc-4e46-8cb9-2c3b68a6c539" />
+
 
 ---
 
