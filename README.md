@@ -25,12 +25,12 @@
 
 ## 🖼️ 界面预览
 
-#登录页
+登录页面
 <img width="533" height="760" alt="image" src="https://github.com/user-attachments/assets/3a69c309-270c-450d-ad40-579f353c5831" />
 
 
 
-#AI客服
+AI客服页面
 <img width="1918" height="911" alt="image" src="https://github.com/user-attachments/assets/0256ccef-87bc-4e46-8cb9-2c3b68a6c539" />
 
 
