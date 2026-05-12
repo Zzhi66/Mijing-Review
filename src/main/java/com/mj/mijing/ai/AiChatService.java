@@ -1,6 +1,7 @@
 package com.mj.mijing.ai;
 
 import com.mj.mijing.utils.RedisConstants;
+import com.mj.mijing.service.UserMemoryService;
 import dev.langchain4j.community.model.dashscope.QwenChatModel;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -43,6 +44,9 @@ public class AiChatService {
     @Resource
     private ShopOrderTool shopOrderTool;
 
+    @Resource
+    private UserMemoryService userMemoryService;
+
     /**
      * 多轮对话（带会话记忆）
      * @param userId  用户 ID（会话隔离）
@@ -65,6 +69,7 @@ public class AiChatService {
 
         // 3. 调用模型（含 Function Calling 工具注册）
         String response;
+        boolean aiCallSucceeded = false;
         try {
             // 注入用户上下文，供 Tool 使用（主要用于下单逻辑）
             UserDTO user = new UserDTO();
@@ -86,6 +91,7 @@ public class AiChatService {
                     .build();
 
             response = assistant.chat(contextBuilder.toString() + "\n用户：" + message);
+            aiCallSucceeded = true;
         } catch (Exception e) {
             log.error("AI 模型调用失败：{}", e.getMessage());
             response = "抱歉，AI 客服暂时不可用，请稍后再试。";
@@ -101,6 +107,15 @@ public class AiChatService {
         stringRedisTemplate.opsForList().leftPush(historyKey, userRecord);
         stringRedisTemplate.opsForList().trim(historyKey, 0, RedisConstants.AI_CHAT_HISTORY_MAX - 1);
         stringRedisTemplate.expire(historyKey, RedisConstants.AI_CHAT_HISTORY_TTL, TimeUnit.MINUTES);
+
+        if (aiCallSucceeded) {
+            try {
+                // 长期个性化记忆异步沉淀到数据库，不阻塞本次聊天响应。
+                userMemoryService.extractAndSaveFromChat(userId, message, response);
+            } catch (Exception e) {
+                log.warn("提交用户记忆提取任务失败：{}", e.getMessage());
+            }
+        }
 
         return response;
     }

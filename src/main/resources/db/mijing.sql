@@ -142,6 +142,24 @@ CREATE TABLE `tb_voucher_order` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='优惠券的订单表';
 
+-- 用户长期个性化记忆表
+DROP TABLE IF EXISTS `tb_user_memory`;
+CREATE TABLE `tb_user_memory` (
+    `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '记忆ID',
+    `user_id`     BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+    `memory_type` VARCHAR(32)     NOT NULL COMMENT '记忆类型：preference偏好，fact事实',
+    `content`     VARCHAR(512)    NOT NULL COMMENT '结构化后的记忆内容',
+    `confidence`  DECIMAL(3,2)    NOT NULL DEFAULT 0.80 COMMENT '模型提取置信度',
+    `source`      VARCHAR(32)     NOT NULL DEFAULT 'ai_chat' COMMENT '记忆来源',
+    `source_hash` VARCHAR(64)     NOT NULL COMMENT '用户、类型、内容生成的去重哈希',
+    `enabled`     TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '是否启用：1启用，0禁用',
+    `create_time` TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_user_memory_hash` (`user_id`, `source_hash`),
+    KEY `idx_user_memory_type` (`user_id`, `memory_type`, `enabled`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户长期个性化记忆表';
+
 -- =========== 初始化数据 ===========
 
 -- 商铺类型
