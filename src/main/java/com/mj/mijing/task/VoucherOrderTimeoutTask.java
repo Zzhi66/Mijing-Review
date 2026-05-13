@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 
 /**
  * Spring Task 定时任务：超时未支付订单自动关单
- * 每分钟扫描，关闭 30 分钟前创建且状态为"待支付"的订单，回复库存
+ * 每分钟扫描，关闭 30 分钟前创建且状态为"待支付"的订单，恢复库存
  */
 @Slf4j
 @Component
@@ -33,16 +33,15 @@ public class VoucherOrderTimeoutTask {
         voucherOrderService.list(
                 new LambdaUpdateWrapper<VoucherOrder>()
                         .eq(VoucherOrder::getStatus, 1) // 1=待支付
-                        .lt(VoucherOrder::getCreateTime, timeout)
-        ).forEach(order -> {
-            // 关闭订单（状态改为4-已取消）
-            voucherOrderService.update(
-                    new LambdaUpdateWrapper<VoucherOrder>()
-                            .eq(VoucherOrder::getId, order.getId())
-                            .eq(VoucherOrder::getVersion, order.getVersion()) // 乐观锁
-                            .set(VoucherOrder::getStatus, 4)
-            );
-            log.info("超时订单已关闭：orderId={}", order.getId());
-        });
+                        .lt(VoucherOrder::getCreateTime, timeout))
+                .forEach(order -> {
+                    // 关闭订单（状态改为4-已取消）
+                    voucherOrderService.update(
+                            new LambdaUpdateWrapper<VoucherOrder>()
+                                    .eq(VoucherOrder::getId, order.getId())
+                                    .eq(VoucherOrder::getVersion, order.getVersion()) // 乐观锁
+                                    .set(VoucherOrder::getStatus, 4));
+                    log.info("超时订单已关闭：orderId={}", order.getId());
+                });
     }
 }

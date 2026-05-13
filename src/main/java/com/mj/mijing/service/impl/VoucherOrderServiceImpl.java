@@ -156,13 +156,37 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             boolean success = seckillVoucherService.deductStock(voucherId);
             if (!success) {
                 log.warn("库存扣减失败（乐观锁），voucherId={}", voucherId);
+                // 乐观锁失败：DB 未写入，回滚 Redis 已扣减的库存与购买记录
+                rollbackRedis(userId, voucherId);
                 return;
             }
             // 保存订单
-            save(voucherOrder);
-            log.info("订单创建成功，orderId={}", voucherOrder.getId());
+            try {
+                save(voucherOrder);
+                log.info("订单创建成功，orderId={}", voucherOrder.getId());
+            } catch (Exception e) {
+                // DB 写入失败：@Transactional 会回滚 DB，此处手动回滚 Redis
+                log.error("订单保存异常，执行 Redis 补偿回滚，userId={}, voucherId={}, error={}",
+                        userId, voucherId, e.getMessage());
+                rollbackRedis(userId, voucherId);
+                throw e; // 重新抛出，触发 @Transactional 回滚 deductStock 的 DB 操作
+            }
         } finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * 回滚 Redis 中 Lua 脚本已执行的操作：
+     *   - 恢复秒杀库存计数
+     *   - 移除用户已购记录
+     * 适用于 Kafka 消费端 DB 写入失败的补偿场景
+     */
+    private void rollbackRedis(Long userId, Long voucherId) {
+        String stockKey = RedisConstants.SECKILL_STOCK_KEY + voucherId;
+        String orderKey = SystemConstants.SECKILL_ORDER_KEY_PREFIX + voucherId;
+        stringRedisTemplate.opsForValue().increment(stockKey);                        // 恢复库存
+        stringRedisTemplate.opsForSet().remove(orderKey, String.valueOf(userId));     // 移除购买记录
+        log.warn("Redis 补偿回滚完成，userId={}, voucherId={}", userId, voucherId);
     }
 }
