@@ -142,6 +142,20 @@ CREATE TABLE `tb_voucher_order` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='优惠券的订单表';
 
+-- 门店预约到店表
+DROP TABLE IF EXISTS `tb_shop_appointment`;
+CREATE TABLE `tb_shop_appointment` (
+    `id`               BIGINT          NOT NULL COMMENT '预约单号（全局唯一ID）',
+    `user_id`          BIGINT UNSIGNED NOT NULL COMMENT '预约用户id',
+    `shop_id`          BIGINT UNSIGNED NOT NULL COMMENT '商铺id',
+    `appointment_time` TIMESTAMP       NOT NULL COMMENT '预约到店时间',
+    `create_time`      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_shop_id` (`shop_id`),
+    KEY `idx_appointment_time` (`shop_id`, `appointment_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='门店预约到店表';
+
 -- 用户长期个性化记忆表
 DROP TABLE IF EXISTS `tb_user_memory`;
 CREATE TABLE `tb_user_memory` (
