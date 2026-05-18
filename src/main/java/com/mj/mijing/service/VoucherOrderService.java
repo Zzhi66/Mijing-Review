@@ -14,4 +14,9 @@ public interface VoucherOrderService extends IService<VoucherOrder> {
      * 异步创建订单（由 Kafka 消费者调用）
      */
     void createVoucherOrder(VoucherOrder voucherOrder);
+
+    /**
+     * 查询秒杀订单异步创建状态（供前端轮询）
+     */
+    Result getSeckillOrderStatus(Long orderId);
 }

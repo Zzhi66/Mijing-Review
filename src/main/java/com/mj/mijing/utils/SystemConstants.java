@@ -27,6 +27,9 @@ public class SystemConstants {
     /** 秒杀已购用户集合 Key 前缀 */
     public static final String SECKILL_ORDER_KEY_PREFIX = "mj:seckill:order:";
 
+    /** 秒杀订单创建状态 Key 前缀（Hash：status + userId） */
+    public static final String ORDER_STATUS_KEY_PREFIX = "mj:order:status:";
+
     /** Caffeine 本地缓存最大条目数 */
     public static final int CAFFEINE_MAX_SIZE = 500;
     public static final long CAFFEINE_EXPIRE_MINUTES = 10L;

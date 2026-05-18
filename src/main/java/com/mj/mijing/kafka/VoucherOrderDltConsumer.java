@@ -1,5 +1,6 @@
 package com.mj.mijing.kafka;
 
+import com.mj.mijing.utils.OrderStatusRedisHelper;
 import com.mj.mijing.utils.RedisConstants;
 import com.mj.mijing.utils.SystemConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,9 @@ public class VoucherOrderDltConsumer {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
+    @Resource
+    private OrderStatusRedisHelper orderStatusRedisHelper;
+
     @KafkaListener(topics = SystemConstants.TOPIC_VOUCHER_ORDER_DLT, groupId = "mijing-dlt-group")
     public void onDeadLetterMessage(VoucherOrderMessage msg) {
         log.error("【死信队列】收到消费失败的秒杀订单，执行补偿回滚，orderId={}, userId={}, voucherId={}",
@@ -38,6 +42,8 @@ public class VoucherOrderDltConsumer {
 
             log.warn("【死信队列】Redis 补偿回滚完成，voucherId={}, userId={}",
                     msg.getVoucherId(), msg.getUserId());
+
+            orderStatusRedisHelper.markFailed(msg.getOrderId(), msg.getUserId());
 
             // TODO: 对接告警平台（钉钉/企微/邮件），通知运维人员
             // alertService.sendAlert("秒杀订单落库失败", msg);

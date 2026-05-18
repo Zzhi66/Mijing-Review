@@ -1,14 +1,16 @@
 package com.mj.mijing.service.impl;
 
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mj.mijing.dto.OrderCreateStatus;
 import com.mj.mijing.dto.Result;
+import com.mj.mijing.dto.SeckillOrderStatusVO;
 import com.mj.mijing.entity.SeckillVoucher;
 import com.mj.mijing.entity.VoucherOrder;
 import com.mj.mijing.kafka.VoucherOrderMessage;
 import com.mj.mijing.mapper.VoucherOrderMapper;
 import com.mj.mijing.service.SeckillVoucherService;
 import com.mj.mijing.service.VoucherOrderService;
+import com.mj.mijing.utils.OrderStatusRedisHelper;
 import com.mj.mijing.utils.RedisConstants;
 import com.mj.mijing.utils.RedisIdWorker;
 import com.mj.mijing.utils.SystemConstants;
@@ -27,7 +29,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 
 /**
  * 优惠券订单 Service 实现
@@ -56,6 +58,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Resource
     private KafkaTemplate<String, VoucherOrderMessage> kafkaTemplate;
 
+    @Resource
+    private OrderStatusRedisHelper orderStatusRedisHelper;
+
     /** 秒杀 Lua 脚本 */
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
 
@@ -67,7 +72,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     /**
      * 秒杀下单（高并发入口）
-     * Lua 脚本原子校验 → Kafka 削峰 → 异步创建订单
+     * Lua 脚本原子校验 → Kafka 削峰 → 异步创建订单。
+     * 返回的 orderId 为关联 ID，表示资格抢占成功、订单创建受理中，不表示 DB 已落库。
      */
     @Override
     public Result seckillVoucher(Long voucherId) {
@@ -106,7 +112,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return Result.fail("每人限购一张");
         }
 
-        // 3. 发送 Kafka 消息（异步处理，流量削峰）+ 回调补偿
+        // 3. 标记订单创建受理中
+        orderStatusRedisHelper.markPending(orderId, userId);
+
+        // 4. 发送 Kafka 消息（异步处理，流量削峰）+ 回调补偿
         VoucherOrderMessage msg = new VoucherOrderMessage(orderId, userId, voucherId);
         String stockKey = RedisConstants.SECKILL_STOCK_KEY + voucherId;
         String orderKey = SystemConstants.SECKILL_ORDER_KEY_PREFIX + voucherId;
@@ -121,10 +130,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                                     orderId, voucherId, failure.getMessage());
                             stringRedisTemplate.opsForValue().increment(stockKey);
                             stringRedisTemplate.opsForSet().remove(orderKey, String.valueOf(userId));
+                            orderStatusRedisHelper.markFailed(orderId, userId);
                         }
                 );
 
-        // 快速返回订单 ID（异步创建中）
         return Result.ok(orderId);
     }
 
@@ -135,6 +144,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Override
     @Transactional
     public void createVoucherOrder(VoucherOrder voucherOrder) {
+        Long orderId = voucherOrder.getId();
         Long userId = voucherOrder.getUserId();
         Long voucherId = voucherOrder.getVoucherId();
 
@@ -143,6 +153,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         boolean isLock = lock.tryLock();
         if (!isLock) {
             log.warn("重复下单请求被拒绝，userId={}", userId);
+            resolveStatusAfterFailure(orderId, userId);
             return;
         }
         try {
@@ -150,30 +161,70 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             int count = query().eq("user_id", userId).eq("voucher_id", voucherId).count().intValue();
             if (count > 0) {
                 log.warn("用户已购买，userId={}, voucherId={}", userId, voucherId);
+                orderStatusRedisHelper.markSuccess(orderId, userId);
                 return;
             }
             // 扣减库存（乐观锁：stock > 0，同步扣减 Redis 缓存）
             boolean success = seckillVoucherService.deductStock(voucherId);
             if (!success) {
                 log.warn("库存扣减失败（乐观锁），voucherId={}", voucherId);
-                // 乐观锁失败：DB 未写入，回滚 Redis 已扣减的库存与购买记录
                 rollbackRedis(userId, voucherId);
+                orderStatusRedisHelper.markFailed(orderId, userId);
                 return;
             }
             // 保存订单
             try {
                 save(voucherOrder);
                 log.info("订单创建成功，orderId={}", voucherOrder.getId());
+                orderStatusRedisHelper.markSuccess(orderId, userId);
             } catch (Exception e) {
-                // DB 写入失败：@Transactional 会回滚 DB，此处手动回滚 Redis
                 log.error("订单保存异常，执行 Redis 补偿回滚，userId={}, voucherId={}, error={}",
                         userId, voucherId, e.getMessage());
                 rollbackRedis(userId, voucherId);
-                throw e; // 重新抛出，触发 @Transactional 回滚 deductStock 的 DB 操作
+                orderStatusRedisHelper.markFailed(orderId, userId);
+                throw e;
             }
         } finally {
             lock.unlock();
         }
+    }
+
+    @Override
+    public Result getSeckillOrderStatus(Long orderId) {
+        Long currentUserId = UserHolder.getUser().getId();
+        Map<String, String> cached = orderStatusRedisHelper.getStatus(orderId);
+
+        if (cached != null) {
+            Long ownerId = Long.parseLong(cached.get("userId"));
+            if (!currentUserId.equals(ownerId)) {
+                return Result.fail("无权查询该订单");
+            }
+            OrderCreateStatus status = OrderCreateStatus.valueOf(cached.get("status"));
+            return Result.ok(buildStatusVO(orderId, status, null));
+        }
+
+        VoucherOrder order = getById(orderId);
+        if (order != null) {
+            if (!currentUserId.equals(order.getUserId())) {
+                return Result.fail("无权查询该订单");
+            }
+            return Result.ok(buildStatusVO(orderId, OrderCreateStatus.SUCCESS, null));
+        }
+
+        return Result.ok(buildStatusVO(orderId, OrderCreateStatus.PENDING, "订单创建中，请稍候"));
+    }
+
+    private void resolveStatusAfterFailure(Long orderId, Long userId) {
+        VoucherOrder existing = getById(orderId);
+        if (existing != null && userId.equals(existing.getUserId())) {
+            orderStatusRedisHelper.markSuccess(orderId, userId);
+        } else {
+            orderStatusRedisHelper.markFailed(orderId, userId);
+        }
+    }
+
+    private SeckillOrderStatusVO buildStatusVO(Long orderId, OrderCreateStatus status, String message) {
+        return new SeckillOrderStatusVO(orderId, status, message);
     }
 
     /**
