@@ -20,4 +20,12 @@ public class VoucherOrderController {
     public Result seckillVoucher(@PathVariable Long id) {
         return voucherOrderService.seckillVoucher(id);
     }
+
+    /**
+     * 查询秒杀订单异步创建状态（前端轮询）
+     */
+    @GetMapping("/status/{orderId}")
+    public Result getSeckillOrderStatus(@PathVariable Long orderId) {
+        return voucherOrderService.getSeckillOrderStatus(orderId);
+    }
 }

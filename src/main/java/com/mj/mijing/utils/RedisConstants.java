@@ -55,4 +55,7 @@ public class RedisConstants {
 
     // 缓存一致性：延迟删除标记
     public static final String CACHE_DELETE_LOCK_KEY = "mj:cache:del:";
+
+    // 秒杀订单创建状态（PENDING/SUCCESS/FAILED）
+    public static final Long ORDER_STATUS_TTL = 600L; // 秒
 }

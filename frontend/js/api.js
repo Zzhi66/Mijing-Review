@@ -164,6 +164,10 @@ export const VoucherOrderAPI = {
   seckill(voucherId) {
     return request(`/voucher-order/seckill/${voucherId}`, { method: 'POST' });
   },
+
+  getStatus(orderId) {
+    return request(`/voucher-order/status/${orderId}`);
+  },
 };
 
 /* =====================

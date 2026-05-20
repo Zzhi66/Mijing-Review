@@ -460,8 +460,9 @@ document.getElementById('btn-seckill').addEventListener('click', async () => {
     btn.classList.remove('loading');
 
     if (res?.success) {
-      seckillDone = true;
-      showResult(true, res.data);
+      const orderId = res.data;
+      btn.textContent = '订单创建中…';
+      await pollOrderStatus(orderId, btn);
     } else {
       btn.disabled = false;
       btn.textContent = '立即抢购';
@@ -482,14 +483,59 @@ document.getElementById('btn-seckill').addEventListener('click', async () => {
   }
 });
 
+/* ── 订单状态轮询 ── */
+const POLL_INTERVAL_MS = 500;
+const POLL_MAX_ATTEMPTS = 30;
+
+async function pollOrderStatus(orderId, btn) {
+  for (let i = 0; i < POLL_MAX_ATTEMPTS; i++) {
+    await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
+    try {
+      const statusRes = await VoucherOrderAPI.getStatus(orderId);
+      if (!statusRes?.success) {
+        if (statusRes?.errorMsg?.includes('无权')) {
+          toast.error(statusRes.errorMsg);
+          resetSeckillBtn(btn);
+          return;
+        }
+        continue;
+      }
+      const { status, message } = statusRes.data || {};
+      if (status === 'SUCCESS') {
+        seckillDone = true;
+        btn.textContent = '已抢购';
+        showResult(true, orderId, '订单已生成，优惠券已入账，请到店出示使用');
+        return;
+      }
+      if (status === 'FAILED') {
+        resetSeckillBtn(btn);
+        showResult(false, null, message || '订单创建失败，请重新抢购');
+        return;
+      }
+    } catch {
+      // 网络抖动，继续轮询
+    }
+  }
+  seckillDone = true;
+  btn.textContent = '处理中';
+  btn.disabled = true;
+  toast.warning('订单处理中，请稍后在订单列表查看');
+  showResult(true, orderId, `订单号：${orderId}\n订单仍在处理中，请稍后查看`);
+}
+
+function resetSeckillBtn(btn) {
+  btn.disabled = false;
+  btn.textContent = '立即抢购';
+}
+
 /* ── 结果弹窗 ── */
-function showResult(success, orderId, failMsg) {
+function showResult(success, orderId, desc) {
   const mask = document.getElementById('result-mask');
   document.getElementById('result-icon').textContent  = success ? '🎉' : '😔';
   document.getElementById('result-title').textContent = success ? '抢购成功！' : '抢购失败';
   document.getElementById('result-desc').textContent  = success
-    ? `订单号：${orderId}\n优惠券已入账，请到店出示使用`
-    : (failMsg || '很遗憾，未能抢到');
+    ? (desc || `订单号：${orderId}\n优惠券已入账，请到店出示使用`)
+    : (desc || '很遗憾，未能抢到');
   mask.classList.add('show');
 }
 
